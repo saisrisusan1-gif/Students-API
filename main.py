@@ -1,4 +1,4 @@
-from fastapi import FastAPI,HTTPException
+from fastapi import FastAPI,HTTPException,status
 from pydantic import BaseModel,Field
 from typing import Optional
 
@@ -25,7 +25,7 @@ class StudentResponse(BaseModel):
     marks: int
     
     
-@app.post("/student",response_model=StudentResponse)
+@app.post("/student",response_model=StudentResponse,status_code=status.HTTP_201_CREATED)
 def create_student(student:StudentRequest):
     global student_id
     new_student=student.dict()
@@ -82,10 +82,10 @@ def partial_update_student(student_id: int, student: StudentUpdate):
 
     raise HTTPException(status_code=404, detail="Student not found")
 
-@app.delete("/student/{student_id}")
-def delete_student(student_id:int):
-    for i,dict1 in enumerate(students_lis):
-        if dict1["student_id"]==student_id:
-            deleted=students_lis.pop(i)
-            return {"deleted":deleted}
+@app.delete("/student/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_student(student_id: int):
+    for i, dict1 in enumerate(students_lis):
+        if dict1["student_id"] == student_id:
+            students_lis.pop(i)
+            return
     raise HTTPException(status_code=404, detail="Student not found")
