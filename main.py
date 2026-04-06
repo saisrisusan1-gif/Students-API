@@ -1,5 +1,7 @@
 from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel,Field
+from typing import Optional
+
 
 app=FastAPI()
 
@@ -10,6 +12,12 @@ class StudentRequest(BaseModel):
     age:int =Field(...,ge=18,le=30)
     marks:int=Field(...,ge=0,le=100)
 
+class StudentUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=3, max_length=50)
+    age: Optional[int] = Field(None, ge=18, le=30)
+    marks: Optional[int] = Field(None, ge=0, le=100)
+    
+    
 @app.post("/student")
 def create_student(student:StudentRequest):
     global student_id
@@ -19,7 +27,7 @@ def create_student(student:StudentRequest):
     students_lis.append(new_student)
     return students_lis[-1]
 
-app.get("/students")
+@app.get("/students")
 def get_all_students(name: str | None = None, age: int | None = None):
     results = students_lis
 
@@ -36,6 +44,32 @@ def get_student(student_id:int):
     for dict1 in students_lis:
         if dict1["student_id"]==student_id:
             return dict1
+    raise HTTPException(status_code=404, detail="Student not found")
+
+@app.put("/student/{student_id}")
+def update_student(student_id:int,student:StudentRequest):
+    for dict1 in students_lis:
+        if dict1["student_id"]==student_id:
+            dict1["age"]=student.age
+            dict1["name"]=student.name
+            dict1["marks"]=student.marks
+            return dict1
+    raise HTTPException(status_code=404,detail="student_id is not found")
+    
+@app.patch("/student/{student_id}")
+def partial_update_student(student_id: int, student: StudentUpdate):
+    for dict1 in students_lis:
+        if dict1["student_id"] == student_id:
+            
+            if student.name is not None:
+                dict1["name"] = student.name
+            if student.age is not None:
+                dict1["age"] = student.age
+            if student.marks is not None:
+                dict1["marks"] = student.marks
+
+            return dict1
+
     raise HTTPException(status_code=404, detail="Student not found")
 
 @app.delete("/student/{student_id}")
