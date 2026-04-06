@@ -24,11 +24,11 @@ class StudentRequest(BaseModel):
         if len(value)<6:
             raise ValueError("password must be atleast 6 characters")
         return value
-class StudentUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=3, max_length=50)
-    age: Optional[int] = Field(None, ge=18, le=30)
-    marks: Optional[int] = Field(None, ge=0, le=100)
-    password:Optional[str]
+class StudentUpdate(StudentRequest):
+    name: Optional[str] = None
+    age: Optional[int] = None
+    marks: Optional[int] = None
+    password: Optional[str] = None
     
 class StudentResponse(BaseModel):
     name: str
