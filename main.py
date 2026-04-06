@@ -1,5 +1,5 @@
 from fastapi import FastAPI,HTTPException,status,Query
-
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel,Field,field_validator
 from typing import Optional
 
@@ -40,7 +40,20 @@ class StudentResponse(BaseModel):
     marks: int
     address: AddressRequest
     
-    
+class StudentNotFoundError(Exception):
+    def __init__(self, student_id: int):
+        self.student_id = student_id
+        
+@app.exception_handler(StudentNotFoundError)
+def student_not_found_handler(request, exc: StudentNotFoundError):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "error": f"Student with id {exc.student_id} not found",
+            "status": 404
+        }
+    )
+     
 @app.post("/student",response_model=StudentResponse,status_code=status.HTTP_201_CREATED)
 def create_student(student:StudentRequest):
     global student_id
@@ -100,7 +113,7 @@ def update_student(student_id:int,student:StudentRequest):
             dict1["password"]=student.password
             dict1["address"] = student.address.dict()
             return dict1
-    raise HTTPException(status_code=404,detail="student_id is not found")
+    raise StudentNotFoundError(student_id)
     
 @app.patch("/student/{student_id}", response_model=StudentResponse)
 def partial_update_student(student_id: int, student: StudentUpdate):
@@ -123,12 +136,11 @@ def partial_update_student(student_id: int, student: StudentUpdate):
                 dict1["address"] = student.address.dict()
             return dict1
 
-    raise HTTPException(status_code=404, detail="Student not found")
-
+    raise StudentNotFoundError(student_id)
 @app.delete("/student/{student_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_student(student_id: int):
     for i, dict1 in enumerate(students_lis):
         if dict1["student_id"] == student_id:
             students_lis.pop(i)
             return
-    raise HTTPException(status_code=404, detail="Student not found")
+    raise StudentNotFoundError(student_id)
