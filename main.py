@@ -64,8 +64,12 @@ def update_student(student_id:int,student:StudentRequest):
             return dict1
     raise HTTPException(status_code=404,detail="student_id is not found")
     
-@app.patch("/student/{student_id}",response_model=StudentResponse)
+@app.patch("/student/{student_id}", response_model=StudentResponse)
 def partial_update_student(student_id: int, student: StudentUpdate):
+    
+    if student.dict(exclude_unset=True) == {}:
+        raise HTTPException(status_code=400, detail="No data provided for update")
+
     for dict1 in students_lis:
         if dict1["student_id"] == student_id:
             
