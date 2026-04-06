@@ -1,6 +1,6 @@
 from fastapi import FastAPI,HTTPException,status,Query
 
-from pydantic import BaseModel,Field
+from pydantic import BaseModel,Field,field_validator
 from typing import Optional
 
 
@@ -10,10 +10,20 @@ students_lis=[]
 student_id=1
 class StudentRequest(BaseModel):
     name:str =Field(...,min_length=3,max_length=50)
-    age:int =Field(...,ge=18,le=30)
+    age: int = Field(..., ge=5, le=100)
     marks:int=Field(...,ge=0,le=100)
     password:str
-
+    @field_validator("name")
+    def name_should_not_have_numbers(cls,value):
+        if any(char.isdigit() for char in value):
+            raise ValueError("Name should not contain number")
+        return value
+    
+    @field_validator("password")
+    def password_strength(cls,value):
+        if len(value)<6:
+            raise ValueError("password must be atleast 6 characters")
+        return value
 class StudentUpdate(BaseModel):
     name: Optional[str] = Field(None, min_length=3, max_length=50)
     age: Optional[int] = Field(None, ge=18, le=30)
