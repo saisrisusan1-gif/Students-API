@@ -1,13 +1,17 @@
-from fastapi import FastAPI,HTTPException,status,Query
+from fastapi import FastAPI,HTTPException,status,Query,Header, Depends
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel,Field,field_validator
 from typing import Optional
 
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != "secret123":
+        raise HTTPException(status_code=401, detail="Invalid API Key")
 
 app = FastAPI(
     title="Student Management API",
     description="API for managing students with validation, filtering, sorting, pagination, and nested address",
-    version="1.0.0"
+    version="1.0.0",
+    dependencies=[Depends(verify_api_key)]
 )
 
 students_lis=[]
