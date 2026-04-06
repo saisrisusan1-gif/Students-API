@@ -19,9 +19,17 @@ def create_student(student:StudentRequest):
     students_lis.append(new_student)
     return students_lis[-1]
 
-@app.get("/students")
-def get_all_students():
-    return students_lis
+app.get("/students")
+def get_all_students(name: str | None = None, age: int | None = None):
+    results = students_lis
+
+    if name is not None:
+        results = [s for s in results if s["name"] == name]
+
+    if age is not None:
+        results = [s for s in results if s["age"] == age]
+
+    return results
      
 @app.get("/student/{student_id}")
 def get_student(student_id:int):
