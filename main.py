@@ -8,11 +8,15 @@ app=FastAPI()
 
 students_lis=[]
 student_id=1
+class AddressRequest(BaseModel):
+    city: str = Field(..., min_length=3, max_length=50)
+    state: str = Field(..., min_length=3, max_length=50)
 class StudentRequest(BaseModel):
     name:str =Field(...,min_length=3,max_length=50)
     age: int = Field(..., ge=5, le=100)
     marks:int=Field(...,ge=0,le=100)
     password:str
+    address:AddressRequest
     @field_validator("name")
     def name_should_not_have_numbers(cls,value):
         if any(char.isdigit() for char in value):
@@ -24,16 +28,17 @@ class StudentRequest(BaseModel):
         if len(value)<6:
             raise ValueError("password must be atleast 6 characters")
         return value
-class StudentUpdate(StudentRequest):
-    name: Optional[str] = None
-    age: Optional[int] = None
-    marks: Optional[int] = None
-    password: Optional[str] = None
-    
+class StudentUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=3, max_length=50)
+    age: Optional[int] = Field(None, ge=5, le=100)
+    marks: Optional[int] = Field(None, ge=0, le=100)
+    password: Optional[str]
+    address: Optional[AddressRequest] 
 class StudentResponse(BaseModel):
     name: str
     age: int
     marks: int
+    address: AddressRequest
     
     
 @app.post("/student",response_model=StudentResponse,status_code=status.HTTP_201_CREATED)
@@ -93,6 +98,7 @@ def update_student(student_id:int,student:StudentRequest):
             dict1["name"]=student.name
             dict1["marks"]=student.marks
             dict1["password"]=student.password
+            dict1["address"] = student.address.dict()
             return dict1
     raise HTTPException(status_code=404,detail="student_id is not found")
     
@@ -113,7 +119,8 @@ def partial_update_student(student_id: int, student: StudentUpdate):
                 dict1["marks"] = student.marks
             if student.password is not None:
                 dict1["password"] = student.password
-
+            if student.address is not None:
+                dict1["address"] = student.address.dict()
             return dict1
 
     raise HTTPException(status_code=404, detail="Student not found")
