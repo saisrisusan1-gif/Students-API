@@ -4,7 +4,11 @@ from pydantic import BaseModel,Field,field_validator
 from typing import Optional
 
 
-app=FastAPI()
+app = FastAPI(
+    title="Student Management API",
+    description="API for managing students with validation, filtering, sorting, pagination, and nested address",
+    version="1.0.0"
+)
 
 students_lis=[]
 student_id=1
@@ -54,7 +58,13 @@ def student_not_found_handler(request, exc: StudentNotFoundError):
         }
     )
      
-@app.post("/student",response_model=StudentResponse,status_code=status.HTTP_201_CREATED)
+@app.post("/student",response_model=StudentResponse,status_code=status.HTTP_201_CREATED,tags=["Students"],
+    summary="Create a new student",
+    description="Creates a student with name, age, marks, password, and address.",
+    responses={
+        201: {"description": "Student created successfully"},
+        400: {"description": "Validation error"}
+    })
 def create_student(student:StudentRequest):
     global student_id
     new_student=student.dict()
@@ -63,7 +73,13 @@ def create_student(student:StudentRequest):
     students_lis.append(new_student)
     return students_lis[-1]
 
-@app.get("/students", response_model=list[StudentResponse])
+@app.get("/students", response_model=list[StudentResponse],tags=["Students"],
+    summary="Get all students",
+    description="Retrieve students with filtering, sorting, and pagination.",
+    responses={
+        200: {"description": "List of students"},
+        400: {"description": "Invalid query parameters"}
+    })
 def get_all_students(
     page: int = 1,
     limit: int = 10,
