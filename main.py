@@ -1,4 +1,5 @@
-from fastapi import FastAPI,HTTPException,status
+from fastapi import FastAPI,HTTPException,status,Query
+
 from pydantic import BaseModel,Field
 from typing import Optional
 
@@ -34,15 +35,36 @@ def create_student(student:StudentRequest):
     students_lis.append(new_student)
     return students_lis[-1]
 
-@app.get("/students",response_model=list[StudentResponse])
-def get_all_students(name: str | None = None, age: int | None = None):
+@app.get("/students", response_model=list[StudentResponse])
+def get_all_students(
+    page: int = 1,
+    limit: int = 10,
+    sort_by: str = "marks",
+    order_by: str = Query("asc", pattern="^(asc|desc)$"),
+    name: str | None = None,
+    age: int | None = None,
+):
     results = students_lis
 
+    # 🔍 Filtering
     if name is not None:
         results = [s for s in results if s["name"] == name]
 
     if age is not None:
         results = [s for s in results if s["age"] == age]
+
+    # 🔽 Sorting
+    reverse = True if order_by == "desc" else False
+
+    try:
+        results = sorted(results, key=lambda x: x[sort_by], reverse=reverse)
+    except KeyError:
+        raise HTTPException(status_code=400, detail="Invalid sort field")
+
+    # 📄 Pagination
+    start = (page - 1) * limit
+    end = start + limit
+    results = results[start:end]
 
     return results
      
